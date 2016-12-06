@@ -1,0 +1,21 @@
+{
+  "author": "Michel Ferreira Souza and Jonathan Nizer",
+  "license": "MIT",
+  "version": "1.0.0",
+  "description": "Este trabalho consiste no desenvolvimento de um WebService, permitindo aos alunos consolidar os conceitos e conteúdos abordados em sala de aula acerca de banco de dados com suporte a dados geográficos.",
+  "name": "node-api",
+  "main": "server.js",
+  "scripts": {
+    "test": "./node_modules/.bin/mocha --reporter spec"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/souzacristsf/API-Node-Mongo-Express-Geolocation.git"
+  },
+  "dependencies": {
+    "body-parser": "^1.15.2",
+    "express": "^4.14.0",
+    "mongoose": "^4.7.1",
+    "request": "^2.79.0"
+  }
+}
