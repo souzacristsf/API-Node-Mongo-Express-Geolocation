@@ -11,7 +11,6 @@ var Schema = mongoose.Schema;
 
 var CarrierSchema = new Schema({
     board: { type: String, required: true }
-  }
 });
 
 module.exports = mongoose.model('Carrier', CarrierSchema);

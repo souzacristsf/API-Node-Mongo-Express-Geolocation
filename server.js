@@ -14,6 +14,9 @@ var app         = express(); //definção da nossa aplicação através do expre
 var bodyParser  = require('body-parser');  //chamando o pacote body-parser
 var mongoose = require('mongoose');
 var User = require('./app/models/user');
+var Carrier = require('./app/models/carrier');
+var Point = require('./app/models/point');
+
 
 //Configuração Base da Aplicação:
 //====================================================================================
@@ -47,6 +50,71 @@ router.get('/', function(req, res) {
     res.json({ message: 'YEAH! Seja Bem-Vindo a nossa API' });
 });
 
+router.route('/point')
+
+    /* 1) Método: Criar Usuario (acessar em: POST http://localhost:8080/api/usuarios */
+    .post(function(req, res) {
+        var point = new Point();
+
+        // get coordinates [ <longitude> , <latitude> ]
+        var coords = [];
+        coords[0] = req.body.loc.longitude || 0;
+        coords[1] = req.body.loc.latitude || 0;
+
+        //aqui setamos os campos do usuario (que virá do request)
+        point.loc = coords;
+        point.carrierId = req.body.carrierId;
+
+        point.save(function(error, post) {
+            if(error)
+                res.send(error);
+
+            // res.json({ message: 'Veiculo cadastrado com sucesso!!!' });
+            res.json(post);
+        });
+    })
+
+    /* 2) Método: Selecionar Todos (acessar em: GET http://locahost:8080/api/usuarios) */
+    .get(function(req, res) {
+
+        //Função para Selecionar Todos os 'usuarios' e verificar se há algum erro:
+        Point.find(function(err, point) {
+            if(err)
+                res.send(err);
+
+            res.json(point);
+        });
+    });
+
+router.route('/carrier')
+
+    /* 1) Método: Criar carrier (acessar em: POST http://localhost:8080/api/carrier */
+    .post(function(req, res) {
+        var carrier = new Carrier();
+
+        //aqui setamos os campos do usuario (que virá do request)
+        carrier.board = req.body.board;
+
+        carrier.save(function(error, post) {
+            if(error)
+                res.send(error);
+
+            // res.json({ message: 'Veiculo cadastrado com sucesso!!!' });
+            res.json(post);
+        });
+    })
+
+    /* 2) Método: Selecionar Todos (acessar em: GET http://locahost:8080/api/carrier) */
+    .get(function(req, res) {
+
+        //Função para Selecionar Todos os 'usuarios' e verificar se há algum erro:
+        Carrier.find(function(err, carrier) {
+            if(err)
+                res.send(err);
+
+            res.json(carrier);
+        });
+    });
 // Rotas que irão terminar em '/usuarios' - (servem tanto para: GET All & POST)
 router.route('/user')
 

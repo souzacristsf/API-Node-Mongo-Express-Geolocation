@@ -12,11 +12,11 @@ var Schema = mongoose.Schema;
 var PointSchema = new Schema({
     data: { type: Date, default: Date.now },
     loc: {
-    type: [Number],  // [<longitude>, <latitude>]
-    index: '2d',    // create the geospatial index
-    required: true
-    }
-  }
+      type: [Number],  // [<longitude>, <latitude>]
+      index: '2d',    // create the geospatial index
+      required: true
+    },
+    carrierId: { type: mongoose.Schema.Types.ObjectId, ref: 'Carriers'}
 });
 
 module.exports = mongoose.model('Point', PointSchema);
