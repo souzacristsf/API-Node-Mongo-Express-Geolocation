@@ -16,7 +16,7 @@ var mongoose = require('mongoose');
 var User = require('./app/models/user');
 var Carrier = require('./app/models/carrier');
 var Point = require('./app/models/point');
-
+var Parking = require('./app/models/parking');
 
 //Configuração Base da Aplicação:
 //====================================================================================
@@ -50,16 +50,56 @@ router.get('/', function(req, res) {
     res.json({ message: 'YEAH! Seja Bem-Vindo a nossa API' });
 });
 
+// router.route('/parking')
+//
+//     /* 1) Método: Criar Usuario (acessar em: POST http://localhost:8080/api/usuarios */
+//     .post(function(req, res) {
+//         var parking = new Parking();
+//
+//         // get coordinates [ <longitude> , <latitude> ]
+//         var coords = [];
+//         coords[0] = req.body.area.longitude || 0;
+//         coords[1] = req.body.area.latitude || 0;
+//
+//         //aqui setamos os campos do usuario (que virá do request)
+//         parking.name = req.body.name;
+//         parking.price = req.body.price;
+//         parking.area = { type: "Polygon", coordinates: coords };
+//
+//         console.log(parking);
+//
+//         parking.save(function(error, post) {
+//             if(error)
+//                 res.send(error);
+//
+//             // res.json({ message: 'Veiculo cadastrado com sucesso!!!' });
+//             res.json(post);
+//         });
+//     })
+//
+//     /* 2) Método: Selecionar Todos (acessar em: GET http://locahost:8080/api/usuarios) */
+//     .get(function(req, res) {
+//
+//         //Função para Selecionar Todos os 'usuarios' e verificar se há algum erro:
+//         Parking.find(function(err, parking) {
+//             if(err)
+//                 res.send(err);
+//
+//             res.json(parking);
+//         });
+//     });
+
 router.route('/point')
 
     /* 1) Método: Criar Usuario (acessar em: POST http://localhost:8080/api/usuarios */
     .post(function(req, res) {
         var point = new Point();
+        // var parkings = new Parking();
 
         // get coordinates [ <longitude> , <latitude> ]
         var coords = [];
-        coords[0] = req.body.loc.longitude || 0;
-        coords[1] = req.body.loc.latitude || 0;
+        coords[1] = parseFloat(req.body.loc.longitude) || 0;
+        coords[0] = parseFloat(req.body.loc.latitude) || 0;
 
         //aqui setamos os campos do usuario (que virá do request)
         point.loc = coords;
@@ -67,12 +107,35 @@ router.route('/point')
 
         point.save(function(error, post) {
             if(error)
-                res.send(error);
+              res.send(error);
+            var query = { area: {
+                          $geoIntersects: {
+                             $geometry: {
+                                type: "Point" ,
+                                coordinates:  post.loc
+                             }
+                          }
+                        }
+            };
 
-            // res.json({ message: 'Veiculo cadastrado com sucesso!!!' });
-            res.json(post);
-        });
-    })
+            Parking.find(query)
+            .exec()
+            .then( (data) => {
+              var result = {
+                _id: post._id,
+                data: post.data,
+                loc: post.loc,
+                carrierId: post.carrierId,
+                parking: locations[0].name
+              };
+              res.json(200, result);
+            })
+            .catch( (error) => {
+              console.log(error);
+            });
+          });
+        })
+
 
     /* 2) Método: Selecionar Todos (acessar em: GET http://locahost:8080/api/usuarios) */
     .get(function(req, res) {
@@ -115,6 +178,7 @@ router.route('/carrier')
             res.json(carrier);
         });
     });
+
 // Rotas que irão terminar em '/usuarios' - (servem tanto para: GET All & POST)
 router.route('/user')
 
