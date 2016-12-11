@@ -121,6 +121,10 @@ router.route('/point')
         //   return Point.find(query).exec()
         // }
 
+        const updateOne = (update) => {
+
+        }
+
         const success = (post) => {
 
           var query = { area: {
@@ -132,7 +136,6 @@ router.route('/point')
               }
             }
           };
-
           return Parking.find(query).exec().then( (data) => {
             var query = [
                {
@@ -146,21 +149,50 @@ router.route('/point')
                     }
                }
             ];
+            const getDurationInMinutes = (previousData, currentData, index, array)  => {
+              let ms = currentData.dataIn.getTime() - previousData.dataIn.getTime();
+              return Math.abs(((ms) /1000) / 60);
+              // return (((previousData.data.getTime() - (currentData.data.getTime())/1000))/60);
+            //  return moment.utc(moment(currentData.data,"HH:mm:ss").diff(moment(previousData.data,"HH:mm:ss"))).format("HH:mm:ss")
+            }
 
             const getDates = (previousData, currentData, index, array)  => {
-                return (currentData.dist / (moment(previousData.data).valueOf() - moment(currentData.data).valueOf())) * 3.6;
-              }
+                return (currentData.dist / (moment(previousData.dataIn).valueOf() - moment(currentData.dataIn).valueOf())) * 3.6;
+            }
 
           return  Point.aggregate(query).exec().then( (dados) => {
               if(dados.length == 2){
-                var time = dados.reduce(getDates)
+                var speed = dados.reduce(getDates)
+                // console.log(dados);
+                var durationInMinutes = dados.reduce(getDurationInMinutes)
+                // console.log(durationInMinutes.toString().replice('.',','))
+                var queryUpdate = {
+                  $set: {
+                        dateOut: dados[0].dataIn,
+                        durationInMinutes: durationInMinutes,
+                        price: parseFloat((10/60)*durationInMinutes)//Math.round((10/60)*durationInMinutes).toFixed(2)
+                      }
+                };
+                // console.log('dados',dados);
+                // var id = { "_id": mongoose.Types.ObjectId(dados[1]._id) };
+                var query = {dateOut: {$exists : false}};
+
+
+                // console.log(id);
+
+                Point.update(query ,queryUpdate).then( (data) => {
+                    // console.log(data);
+                })
+                .catch( err => console.log(err))
+
+
                 var result = {
                   _id: post._id,
-                  data: post.data,
+                  dataIn: post.dataIn,
                   loc: post.loc,
                   carrierId: post.carrierId,
                   parking: data[0].name,
-                  absoluteSpeed: time
+                  absoluteSpeed: speed
                 };
 
                 return result;
@@ -168,7 +200,7 @@ router.route('/point')
               else {
                 return result = {
                   _id: post._id,
-                  data: post.data,
+                  dataIn: post.dataIn,
                   loc: post.loc,
                   carrierId: post.carrierId,
                   parking: data[0].name,
@@ -186,15 +218,7 @@ router.route('/point')
         Point.create(point)
           .then(success)
           .then( (data) => {
-            console.log('data', data);
-            // var result = {
-            //   _id: point._id,
-            //   data: point.data,
-            //   loc: point.loc,
-            //   carrierId: point.carrierId,
-            //   parking: data[0].name
-            // };
-            return res.status(200).json(data); //res.json(200, result);
+            return res.status(200).json(data);
           })
           .catch((error) => res.send(error))
     })
@@ -205,12 +229,9 @@ router.route('/point')
     .get(function(req, res) {
 
         //Função para Selecionar Todos os 'usuarios' e verificar se há algum erro:
-        Point.find(function(err, point) {
-            if(err)
-                res.send(err);
-
-            res.json(point);
-        });
+        Point.find({carrierId: req.body.carrierId}).exec().then( data => {
+            res.json(data);
+        }).catch((error) => res.send(error))
     });
 
 router.route('/carrier')

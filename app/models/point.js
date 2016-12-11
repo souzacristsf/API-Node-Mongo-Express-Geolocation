@@ -9,14 +9,20 @@
 var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 
+require('mongoose-currency').loadType(mongoose);
+var Currency = mongoose.Types.Currency;
+
 var PointSchema = new Schema({
-    data: { type: Date, default: Date.now },
+    dataIn: { type: Date, default: Date.now },
     loc: {
       type: [Number],  // [<longitude>, <latitude>]
       index: '2d',    // create the geospatial index
       required: true
     },
-    carrierId: { type: mongoose.Schema.Types.ObjectId, ref: 'Carriers'}
+    carrierId: { type: mongoose.Schema.Types.ObjectId, ref: 'Carriers'},
+    dateOut: { type: Date },
+    durationInMinutes: String,
+    price: { type: Currency }
 });
 
 module.exports = mongoose.model('Point', PointSchema);
