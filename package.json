@@ -15,6 +15,7 @@
   "dependencies": {
     "body-parser": "^1.15.2",
     "express": "^4.14.0",
+    "moment": "^2.17.1",
     "mongoose": "^4.7.1",
     "mongoose-currency": "^0.2.0",
     "request": "^2.79.0"
