@@ -51,44 +51,79 @@ router.get('/', function(req, res) {
     res.json({ message: 'YEAH! Seja Bem-Vindo a nossa API' });
 });
 
-// router.route('/parking')
-//
-//     /* 1) Método: Criar Usuario (acessar em: POST http://localhost:8080/api/usuarios */
-//     .post(function(req, res) {
-//         var parking = new Parking();
-//
-//         // get coordinates [ <longitude> , <latitude> ]
-//         var coords = [];
-//         coords[0] = req.body.area.longitude || 0;
-//         coords[1] = req.body.area.latitude || 0;
-//
-//         //aqui setamos os campos do usuario (que virá do request)
-//         parking.name = req.body.name;
-//         parking.price = req.body.price;
-//         parking.area = { type: "Polygon", coordinates: coords };
-//
-//         console.log(parking);
-//
-//         parking.save(function(error, post) {
-//             if(error)
-//                 res.send(error);
-//
-//             // res.json({ message: 'Veiculo cadastrado com sucesso!!!' });
-//             res.json(post);
-//         });
-//     })
-//
-//     /* 2) Método: Selecionar Todos (acessar em: GET http://locahost:8080/api/usuarios) */
-//     .get(function(req, res) {
-//
-//         //Função para Selecionar Todos os 'usuarios' e verificar se há algum erro:
-//         Parking.find(function(err, parking) {
-//             if(err)
-//                 res.send(err);
-//
-//             res.json(parking);
-//         });
-//     });
+router.route('/parking')
+
+    /* 1) Método: Criar Usuario (acessar em: POST http://localhost:8080/api/usuarios */
+    // .post(function(req, res) {
+    //     var parking = new Parking();
+    //
+    //     // get coordinates [ <longitude> , <latitude> ]
+    //     var coords = [];
+    //     coords[0] = req.body.area.longitude || 0;
+    //     coords[1] = req.body.area.latitude || 0;
+    //
+    //     //aqui setamos os campos do usuario (que virá do request)
+    //     parking.name = req.body.name;
+    //     parking.price = req.body.price;
+    //     parking.area = { type: "Polygon", coordinates: coords };
+    //
+    //     console.log(parking);
+    //
+    //     parking.save(function(error, post) {
+    //         if(error)
+    //             res.send(error);
+    //
+    //         // res.json({ message: 'Veiculo cadastrado com sucesso!!!' });
+    //         res.json(post);
+    //     });
+    // })
+
+    /* 2) Método: Selecionar Todos (acessar em: GET http://locahost:8080/api/usuarios) */
+    .get(function(req, res) {
+
+      var coords = [];
+      coords[0] = parseFloat(req.query.latitude) || 0;
+      coords[1] = parseFloat(req.query.longitude) || 0;
+      console.log(coords);
+      var query = [
+         {
+           $geoNear: {
+              near: coords,
+              distanceField: "dist.calculated",
+              distanceMultiplier: 6378.1*1000,
+              includeLocs: "dist.location",
+              spherical: true
+           }
+         }
+      ];
+
+        //Função para Selecionar Todos os 'usuarios' e verificar se há algum erro:
+        Parking.aggregate(query).exec().then( data => {
+
+          let result = data.map(function(data){
+            return {
+              name: data.name,
+              priceMinute: data.price/60,
+              distanceInMetro: data.dist.calculated
+            }
+          });
+
+          // data.forEach(function(data){
+            // var teste = {
+            //   name: data.name,
+            //   priceMinute: data.price,
+            //   distanceInMetro: data.dist.calculated
+            // }
+          //   result.push(teste);
+          // })
+          // data.filter(function(elem, index, array) {
+          //
+          // });
+
+          res.status(200).json(result);
+        })
+        .catch( err => console.log(err))
+    });
 
 router.route('/point')
 
@@ -102,28 +137,6 @@ router.route('/point')
         var coords = [];
         coords[0] = parseFloat(req.body.loc.latitude) || 0;
         coords[1] = parseFloat(req.body.loc.longitude) || 0;
-
-        // const documents = (post) => {
-        //   var query = [{
-        //       area: {
-        //         $nearSphere: {
-        //           $geometry: {
-        //             type: "Point",
-        //             coordinates: post.loc
-        //           }
-        //         }
-        //       }},
-        //       {
-        //         "skip": 0, "limit": 2
-        //       }
-        //   ];
-        //
-        //   return Point.find(query).exec()
-        // }
-
-        const updateOne = (update) => {
-
-        }
 
         const success = (post) => {
 
@@ -229,8 +242,8 @@ router.route('/point')
     .get(function(req, res) {
 
         //Função para Selecionar Todos os 'usuarios' e verificar se há algum erro:
-        Point.find({carrierId: req.body.carrierId}).exec().then( data => {
-            res.json(data);
+        Point.find({carrierId: req.query.carrierId}).exec().then( data => {
+            res.status(200).json(data);
         }).catch((error) => res.send(error))
     });
 
